@@ -27,6 +27,9 @@ import 'package:hiddify/singbox/service/singbox_service_provider.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'mine/all_res/http.dart';
+import 'mine/all_res/local_storage.dart';
+
 Future<void> lazyBootstrap(
   WidgetsBinding widgetsBinding,
   Environment env,
@@ -149,6 +152,8 @@ Future<void> lazyBootstrap(
   }
 
   Logger.bootstrap.info("bootstrap took [${stopWatch.elapsedMilliseconds}ms]");
+  SpUtil.initSP();
+  WooHttpUtil();
   stopWatch.stop();
 
   runApp(

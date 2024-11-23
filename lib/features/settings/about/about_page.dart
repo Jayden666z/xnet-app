@@ -8,6 +8,7 @@ import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/model/constants.dart';
 import 'package:hiddify/core/model/failures.dart';
 import 'package:hiddify/core/widget/adaptive_icon.dart';
+
 import 'package:hiddify/features/app_update/notifier/app_update_notifier.dart';
 import 'package:hiddify/features/app_update/notifier/app_update_state.dart';
 import 'package:hiddify/features/app_update/widget/new_version_dialog.dart';
@@ -15,6 +16,10 @@ import 'package:hiddify/features/common/nested_app_bar.dart';
 import 'package:hiddify/gen/assets.gen.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:version/version.dart';
+
+import '../../../mine/all_res/VersionCheck.dart';
+import '../../../mine/all_res/api_request.dart';
 
 class AboutPage extends HookConsumerWidget {
   const AboutPage({super.key});
@@ -27,11 +32,11 @@ class AboutPage extends HookConsumerWidget {
 
     ref.listen(
       appUpdateNotifierProvider,
-      (_, next) async {
+          (_, next) async {
         if (!context.mounted) return;
         switch (next) {
           case AppUpdateStateAvailable(:final versionInfo) ||
-                AppUpdateStateIgnored(:final versionInfo):
+          AppUpdateStateIgnored(:final versionInfo):
             return NewVersionDialog(
               appInfo.presentVersion,
               versionInfo,
@@ -52,14 +57,49 @@ class AboutPage extends HookConsumerWidget {
           title: Text(t.about.checkForUpdate),
           trailing: switch (appUpdate) {
             AppUpdateStateChecking() => const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(),
-              ),
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(),
+            ),
             _ => const Icon(FluentIcons.arrow_sync_24_regular),
           },
           onTap: () async {
-            await ref.read(appUpdateNotifierProvider.notifier).check();
+            final VersionCheck version= await RequestAPi().getVersion();
+            final appInfo = ref.watch(appInfoProvider).requireValue;
+            final latestVersion = Version.parse(version.version);
+            final currentVersion = Version.parse(appInfo.version);
+            if (latestVersion > currentVersion) {
+              //弹出提示
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('New Version'),
+                    content: const Text('Please Update to the latest version!'),
+                    actions: [
+                      TextButton(
+                        child: const Text("Cancel"),
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('Update'),
+                        onPressed: () async {
+                          Navigator.of(context).pop();
+                          await UriUtils.tryLaunch(Uri.parse(version.url));
+                        },
+                      ),
+
+                    ],
+                  );
+                },
+              );
+              return;
+            }
+            print(version.url);
+
+            // await ref.read(appUpdateNotifierProvider.notifier).check();
           },
         ),
       if (PlatformUtils.isDesktop)
@@ -127,24 +167,24 @@ class AboutPage extends HookConsumerWidget {
               [
                 ...conditionalTiles,
                 if (conditionalTiles.isNotEmpty) const Divider(),
-                ListTile(
-                  title: Text(t.about.sourceCode),
-                  trailing: const Icon(FluentIcons.open_24_regular),
-                  onTap: () async {
-                    await UriUtils.tryLaunch(
-                      Uri.parse(Constants.githubUrl),
-                    );
-                  },
-                ),
-                ListTile(
-                  title: Text(t.about.telegramChannel),
-                  trailing: const Icon(FluentIcons.open_24_regular),
-                  onTap: () async {
-                    await UriUtils.tryLaunch(
-                      Uri.parse(Constants.telegramChannelUrl),
-                    );
-                  },
-                ),
+                // ListTile(
+                //   title: Text(t.about.sourceCode),
+                //   trailing: const Icon(FluentIcons.open_24_regular),
+                //   onTap: () async {
+                //     await UriUtils.tryLaunch(
+                //       Uri.parse(Constants.githubUrl),
+                //     );
+                //   },
+                // ),
+                // ListTile(
+                //   title: Text(t.about.telegramChannel),
+                //   trailing: const Icon(FluentIcons.open_24_regular),
+                //   onTap: () async {
+                //     await UriUtils.tryLaunch(
+                //       Uri.parse(Constants.telegramChannelUrl),
+                //     );
+                //   },
+                // ),
                 ListTile(
                   title: Text(t.about.termsAndConditions),
                   trailing: const Icon(FluentIcons.open_24_regular),

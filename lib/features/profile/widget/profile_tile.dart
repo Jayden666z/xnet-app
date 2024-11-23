@@ -14,10 +14,11 @@ import 'package:hiddify/features/common/qr_code_dialog.dart';
 import 'package:hiddify/features/profile/model/profile_entity.dart';
 import 'package:hiddify/features/profile/notifier/profile_notifier.dart';
 import 'package:hiddify/features/profile/overview/profiles_overview_notifier.dart';
-import 'package:hiddify/gen/fonts.gen.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import '../../../gen/translations.g.dart';
+
 
 class ProfileTile extends HookConsumerWidget {
   const ProfileTile({
@@ -50,9 +51,12 @@ class ProfileTile extends HookConsumerWidget {
       _ => null,
     };
 
-    final effectiveMargin = isMain ? const EdgeInsets.symmetric(horizontal: 16, vertical: 8) : const EdgeInsets.only(left: 12, right: 12, bottom: 12);
+    final effectiveMargin = isMain
+        ? const EdgeInsets.symmetric(horizontal: 16, vertical: 8)
+        : const EdgeInsets.only(left: 12, right: 12, bottom: 12);
     final double effectiveElevation = profile.active ? 12 : 4;
-    final effectiveOutlineColor = profile.active ? theme.colorScheme.outlineVariant : Colors.transparent;
+    final effectiveOutlineColor =
+    profile.active ? theme.colorScheme.outlineVariant : Colors.transparent;
 
     return Card(
       margin: effectiveMargin,
@@ -89,15 +93,17 @@ class ProfileTile extends HookConsumerWidget {
                 label: isMain ? t.profile.activeProfileBtnSemanticLabel : null,
                 child: InkWell(
                   onTap: () {
-                    if (isMain) {
-                      const ProfilesOverviewRoute().go(context);
-                    } else {
-                      if (selectActiveMutation.state.isInProgress) return;
-                      if (profile.active) return;
-                      selectActiveMutation.setFuture(
-                        ref.read(profilesOverviewNotifierProvider.notifier).selectActiveProfile(profile.id),
-                      );
-                    }
+                    // if (isMain) {
+                    //   const ProfilesOverviewRoute().go(context);
+                    // } else {
+                    //   if (selectActiveMutation.state.isInProgress) return;
+                    //   if (profile.active) return;
+                    //   selectActiveMutation.setFuture(
+                    //     ref
+                    //         .read(profilesOverviewNotifierProvider.notifier)
+                    //         .selectActiveProfile(profile.id),
+                    //   );
+                    // }
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -115,43 +121,47 @@ class ProfileTile extends HookConsumerWidget {
                               color: Colors.transparent,
                               clipBehavior: Clip.antiAlias,
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Flexible(
-                                    child: Text(
-                                      profile.name,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.titleMedium?.copyWith(
-                                        fontFamily: FontFamily.emoji,
-                                      ),
-                                      semanticsLabel: t.profile.activeProfileNameSemanticLabel(
-                                        name: profile.name,
-                                      ),
-                                    ),
-                                  ),
-                                  const Icon(
-                                    FluentIcons.caret_down_16_filled,
-                                    size: 16,
-                                  ),
+                                  // Flexible(
+                                  //   child: Text(
+                                  //     profile.name,
+                                  //     maxLines: 2,
+                                  //     overflow: TextOverflow.ellipsis,
+                                  //     style:
+                                  //         theme.textTheme.titleMedium?.copyWith(
+                                  //       fontFamily: FontFamily.emoji,
+                                  //     ),
+                                  //     semanticsLabel: t.profile
+                                  //         .activeProfileNameSemanticLabel(
+                                  //       name: profile.name,
+                                  //     ),
+                                  //   ),
+                                  // ),
+                                  // const Icon(
+                                  //   FluentIcons.caret_down_16_filled,
+                                  //   size: 16,
+                                  // ),
                                 ],
                               ),
                             ),
                           )
                         else
-                          Text(
-                            profile.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium,
-                            semanticsLabel: profile.active
-                                ? t.profile.activeProfileNameSemanticLabel(
-                                    name: profile.name,
-                                  )
-                                : t.profile.nonActiveProfileBtnSemanticLabel(
-                                    name: profile.name,
-                                  ),
-                          ),
+                          const SizedBox(),
+                        // Text(
+                        //   profile.name,
+                        //   maxLines: 2,
+                        //   overflow: TextOverflow.ellipsis,
+                        //   style: theme.textTheme.titleMedium,
+                        //   semanticsLabel: profile.active
+                        //       ? t.profile.activeProfileNameSemanticLabel(
+                        //           name: profile.name,
+                        //         )
+                        //       : t.profile.nonActiveProfileBtnSemanticLabel(
+                        //           name: profile.name,
+                        //         ),
+                        // ),
                         if (subInfo != null) ...[
                           const Gap(4),
                           RemainingTrafficIndicator(subInfo.ratio),
@@ -189,11 +199,19 @@ class ProfileActionButton extends HookConsumerWidget {
         child: Tooltip(
           message: t.profile.update.tooltip,
           child: InkWell(
-            onTap: () {
+            onTap: () async {
               if (ref.read(updateProfileProvider(profile.id)).isLoading) {
                 return;
               }
-              ref.read(updateProfileProvider(profile.id).notifier).updateProfile(profile as RemoteProfileEntity);
+              bool checkAvailability = await ref
+                  .read(addProfileProvider.notifier)
+                  .checkAvailability(context,(){
+
+              });
+              if (!checkAvailability) {
+                return;
+              }
+              // ref.read(updateProfileProvider(profile.id).notifier).updateProfile(profile as RemoteProfileEntity);
             },
             child: const Icon(FluentIcons.arrow_sync_24_filled),
           ),
@@ -202,7 +220,7 @@ class ProfileActionButton extends HookConsumerWidget {
     }
     return ProfileActionsMenu(
       profile,
-      (context, toggleVisibility, _) {
+          (context, toggleVisibility, _) {
         return Semantics(
           button: true,
           child: Tooltip(
@@ -233,7 +251,9 @@ class ProfileActionsMenu extends HookConsumerWidget {
       initialOnFailure: (err) {
         CustomToast.error(t.presentShortError(err)).show(context);
       },
-      initialOnSuccess: () => CustomToast.success(t.profile.share.exportConfigToClipboardSuccess).show(context),
+      initialOnSuccess: () =>
+          CustomToast.success(t.profile.share.exportConfigToClipboardSuccess)
+              .show(context),
     );
     final deleteProfileMutation = useMutation(
       initialOnFailure: (err) {
@@ -246,11 +266,13 @@ class ProfileActionsMenu extends HookConsumerWidget {
         AdaptiveMenuItem(
           title: t.profile.update.buttonTxt,
           icon: FluentIcons.arrow_sync_24_regular,
-          onTap: () {
+          onTap: () async {
             if (ref.read(updateProfileProvider(profile.id)).isLoading) {
               return;
             }
-            ref.read(updateProfileProvider(profile.id).notifier).updateProfile(profile as RemoteProfileEntity);
+            ref
+                .read(updateProfileProvider(profile.id).notifier)
+                .updateProfile(profile as RemoteProfileEntity);
           },
         ),
       AdaptiveMenuItem(
@@ -265,7 +287,8 @@ class ProfileActionsMenu extends HookConsumerWidget {
                 if (link.isNotEmpty) {
                   await Clipboard.setData(ClipboardData(text: link));
                   if (context.mounted) {
-                    CustomToast(t.profile.share.exportToClipboardSuccess).show(context);
+                    CustomToast(t.profile.share.exportToClipboardSuccess)
+                        .show(context);
                   }
                 }
               },
@@ -290,7 +313,9 @@ class ProfileActionsMenu extends HookConsumerWidget {
                 return;
               }
               exportConfigMutation.setFuture(
-                ref.read(profilesOverviewNotifierProvider.notifier).exportConfigToClipboard(profile),
+                ref
+                    .read(profilesOverviewNotifierProvider.notifier)
+                    .exportConfigToClipboard(profile),
               );
             },
           ),
@@ -318,7 +343,9 @@ class ProfileActionsMenu extends HookConsumerWidget {
           );
           if (deleteConfirmed) {
             deleteProfileMutation.setFuture(
-              ref.read(profilesOverviewNotifierProvider.notifier).deleteProfile(profile),
+              ref
+                  .read(profilesOverviewNotifierProvider.notifier)
+                  .deleteProfile(profile),
             );
           }
         },
@@ -348,8 +375,9 @@ class ProfileSubscriptionInfo extends HookConsumerWidget {
       return (t.profile.subscription.remainingDuration(duration: "∞"), null);
     } else {
       return (
-        t.profile.subscription.remainingDuration(duration: subInfo.remaining.inDays),
-        null,
+      t.profile.subscription
+          .remainingDuration(duration: subInfo.remaining.inDays),
+      null,
       );
     }
   }
@@ -370,7 +398,8 @@ class ProfileSubscriptionInfo extends HookConsumerWidget {
               subInfo.total > 10 * 1099511627776 //10TB
                   ? "∞ GiB"
                   : subInfo.consumption.sizeOf(subInfo.total),
-              semanticsLabel: t.profile.subscription.remainingTrafficSemanticLabel(
+              semanticsLabel:
+              t.profile.subscription.remainingTrafficSemanticLabel(
                 consumed: subInfo.consumption.sizeGB(),
                 total: subInfo.total.sizeGB(),
               ),
@@ -379,13 +408,13 @@ class ProfileSubscriptionInfo extends HookConsumerWidget {
             ),
           ),
         ),
-        Flexible(
-          child: Text(
-            remaining.$1,
-            style: theme.textTheme.bodySmall?.copyWith(color: remaining.$2),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+        // Flexible(
+        //   child: Text(
+        //     remaining.$1,
+        //     style: theme.textTheme.bodySmall?.copyWith(color: remaining.$2),
+        //     overflow: TextOverflow.ellipsis,
+        //   ),
+        // ),
       ],
     );
   }
@@ -402,19 +431,19 @@ class RemainingTrafficIndicator extends StatelessWidget {
     final startColor = ratio < 0.25
         ? const Color.fromRGBO(93, 205, 251, 1.0)
         : ratio < 0.65
-            ? const Color.fromRGBO(205, 199, 64, 1.0)
-            : const Color.fromRGBO(241, 82, 81, 1.0);
+        ? const Color.fromRGBO(205, 199, 64, 1.0)
+        : const Color.fromRGBO(241, 82, 81, 1.0);
     final endColor = ratio < 0.25
         ? const Color.fromRGBO(49, 146, 248, 1.0)
         : ratio < 0.65
-            ? const Color.fromRGBO(98, 115, 32, 1.0)
-            : const Color.fromRGBO(139, 30, 36, 1.0);
+        ? const Color.fromRGBO(98, 115, 32, 1.0)
+        : const Color.fromRGBO(139, 30, 36, 1.0);
 
     return LinearPercentIndicator(
       percent: ratio,
       animation: true,
       padding: EdgeInsets.zero,
-      lineHeight: 6,
+      lineHeight: 10,
       barRadius: const Radius.circular(16),
       linearGradient: LinearGradient(
         colors: [startColor, endColor],

@@ -5,6 +5,8 @@ import 'package:hiddify/core/localization/translations.dart';
 import 'package:hiddify/core/router/router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import 'connection_button.dart';
+
 class EmptyProfilesHomeBody extends HookConsumerWidget {
   const EmptyProfilesHomeBody({super.key});
 
@@ -17,13 +19,14 @@ class EmptyProfilesHomeBody extends HookConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(t.home.emptyProfilesMsg),
+          ConnectionButton(),
+          // Text(t.home.emptyProfilesMsg),
           const Gap(16),
-          OutlinedButton.icon(
-            onPressed: () => const AddProfileRoute().push(context),
-            icon: const Icon(FluentIcons.add_24_regular),
-            label: Text(t.profile.add.buttonText),
-          ),
+          // OutlinedButton.icon(
+          //   onPressed: () => const AddProfileRoute().push(context),
+          //   icon: const Icon(FluentIcons.add_24_regular),
+          //   label: Text(t.profile.add.buttonText),
+          // ),
         ],
       ),
     );
@@ -44,6 +47,8 @@ class EmptyActiveProfileHomeBody extends HookConsumerWidget {
         children: [
           Text(t.home.noActiveProfileMsg),
           const Gap(16),
+          ConnectionButton(),
+          Text("data1"),
           OutlinedButton(
             onPressed: () => const ProfilesOverviewRoute().push(context),
             child: Text(t.profile.overviewPageTitle),

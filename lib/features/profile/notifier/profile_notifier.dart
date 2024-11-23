@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:hiddify/core/haptic/haptic_service.dart';
 import 'package:hiddify/core/localization/translations.dart';
@@ -21,6 +23,13 @@ import 'package:hiddify/features/profile/notifier/active_profile_notifier.dart';
 import 'package:hiddify/utils/riverpod_utils.dart';
 import 'package:hiddify/utils/utils.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../core/router/app_router.dart';
+import '../../../mine/all_res/color_styles.dart';
+import '../../../mine/all_res/http.dart';
+import '../../../mine/all_res/local_storage.dart';
+import '../../../mine/all_res/my_util.dart';
+import '../../../mine/pay_page/pay_page.dart';
 
 part 'profile_notifier.g.dart';
 
@@ -107,6 +116,67 @@ class AddProfile extends _$AddProfile with AppLogger {
       },
     );
   }
+  Future<bool> checkAvailability(BuildContext? context,Function? onFail) async {
+    final t = ref.read(translationsProvider);
+    final res = await WooHttpUtil().get("/api/v1/user/getSubscribe", fail: (e) {
+      onFail?.call();
+      EasyLoading.dismiss();
+      return false;
+    });
+    final jsonStr=jsonEncode(res.data["data"]);
+    SpUtil.save("account_info",
+        jsonStr);
+    int expired_at= res.data["data"]['expired_at'] as int;
+    int currentTimestamp = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+
+    SpUtil.save("subscribe_url",
+        res.data["data"]['subscribe_url'].toString());
+
+    //获取当前时间戳
+    if(expired_at<currentTimestamp){
+      showDialog(
+        context: rootNavigatorKey.currentState!.context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title:  Text(t.planHasOut),
+            content:  Text(t.planHasOutPleasebuy),
+            actions: [
+              TextButton(
+                child: Text(t.renewal),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  showModalBottomSheet(
+                      isScrollControlled: true,
+                      context: rootNavigatorKey.currentState!.context,
+                      builder: (BuildContext context) {
+                        return Container(
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)), // 设置圆角
+                            color: ColorStyles.color_95_white,
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          height: MediaQuery.of(context).size.height - 140,
+                          child: PayPage(),
+                        );
+                      });
+                },
+              ),
+            ],
+          );
+        },
+      );
+      if(onFail!=null){
+        onFail?.call();
+      }
+      return false;
+    }
+    await ref
+        .read(addProfileProvider.notifier)
+        .add(SpUtil.get("subscribe_url").toString());
+
+    return true;
+  }
+
 
   Future<void> check4Warp(String rawInput) async {
     for (final line in rawInput.split("\n")) {

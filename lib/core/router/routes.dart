@@ -17,6 +17,9 @@ import 'package:hiddify/features/settings/about/about_page.dart';
 import 'package:hiddify/features/settings/overview/settings_overview_page.dart';
 import 'package:hiddify/utils/utils.dart';
 
+import '../../mine/login/login_page.dart';
+import '../../mine/mine/mine_page.dart';
+
 part 'routes.g.dart';
 
 GlobalKey<NavigatorState>? _dynamicRootKey = useMobileRouter ? rootNavigatorKey : null;
@@ -69,11 +72,24 @@ GlobalKey<NavigatorState>? _dynamicRootKey = useMobileRouter ? rootNavigatorKey 
           path: "about",
           name: AboutRoute.name,
         ),
+        TypedGoRoute<LoginRoute>(
+          path: "login",
+          name: LoginRoute.name,
+        ),
+
       ],
     ),
     TypedGoRoute<ProxiesRoute>(
       path: "/proxies",
       name: ProxiesRoute.name,
+    ),
+    TypedGoRoute<MineRoute>(
+      path: "/mine",
+      name: MineRoute.name,
+    ),
+    TypedGoRoute<LoginRoute>(
+      path: "/login",
+      name: LoginRoute.name,
     ),
   ],
 )
@@ -100,6 +116,7 @@ class MobileWrapperRoute extends ShellRouteData {
           path: "profiles",
           name: ProfilesOverviewRoute.name,
         ),
+
         TypedGoRoute<NewProfileRoute>(
           path: "profiles/new",
           name: NewProfileRoute.name,
@@ -127,6 +144,10 @@ class MobileWrapperRoute extends ShellRouteData {
       name: SettingsRoute.name,
       routes: [],
     ),
+    TypedGoRoute<MineRoute>(
+      path: "/mine",
+      name: MineRoute.name,
+    ),
     TypedGoRoute<LogsOverviewRoute>(
       path: "/logs",
       name: LogsOverviewRoute.name,
@@ -134,6 +155,10 @@ class MobileWrapperRoute extends ShellRouteData {
     TypedGoRoute<AboutRoute>(
       path: "/about",
       name: AboutRoute.name,
+    ),
+    TypedGoRoute<LoginRoute>(
+      path: "/login",
+      name: LoginRoute.name,
     ),
   ],
 )
@@ -183,6 +208,19 @@ class ProxiesRoute extends GoRouteData {
     return const NoTransitionPage(
       name: name,
       child: ProxiesOverviewPage(),
+    );
+  }
+}
+class MineRoute extends GoRouteData {
+  const MineRoute();
+
+  static const name = "Mine";
+
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) {
+    return NoTransitionPage(
+      name: name,
+      child: MinePage(),
     );
   }
 }
@@ -362,5 +400,20 @@ class AboutRoute extends GoRouteData {
       );
     }
     return const NoTransitionPage(name: name, child: AboutPage());
+  }
+}
+
+class LoginRoute extends GoRouteData {
+  const LoginRoute();
+
+  static const name = "Login";
+  static final GlobalKey<NavigatorState>? $parentNavigatorKey = _dynamicRootKey;
+
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) {
+    return const MaterialPage(
+      name: name,
+      child: LoginPage(),
+    );
   }
 }

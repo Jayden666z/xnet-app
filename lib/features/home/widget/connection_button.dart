@@ -15,6 +15,7 @@ import 'package:hiddify/features/proxy/active/active_proxy_notifier.dart';
 import 'package:hiddify/gen/assets.gen.dart';
 import 'package:hiddify/utils/alerts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 // TODO: rewrite
 class ConnectionButton extends HookConsumerWidget {
@@ -24,20 +25,27 @@ class ConnectionButton extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(translationsProvider);
     final connectionStatus = ref.watch(connectionNotifierProvider);
+    final notifier = ref.watch(connectionNotifierProvider.notifier);
     final activeProxy = ref.watch(activeProxyNotifierProvider);
     final delay = activeProxy.valueOrNull?.urlTestDelay ?? 0;
 
-    final requiresReconnect = ref.watch(configOptionNotifierProvider).valueOrNull;
+    final requiresReconnect =
+        ref.watch(configOptionNotifierProvider).valueOrNull;
     final today = DateTime.now();
+    final isLoadingSub = ref.watch(loadingSubProvider);
+
+
 
     ref.listen(
       connectionNotifierProvider,
-      (_, next) {
+          (_, next) {
         if (next case AsyncError(:final error)) {
           CustomAlertDialog.fromErr(t.presentError(error)).show(context);
         }
-        if (next case AsyncData(value: Disconnected(:final connectionFailure?))) {
-          CustomAlertDialog.fromErr(t.presentError(connectionFailure)).show(context);
+        if (next
+        case AsyncData(value: Disconnected(:final connectionFailure?))) {
+          CustomAlertDialog.fromErr(t.presentError(connectionFailure))
+              .show(context);
         }
       },
     );
@@ -48,49 +56,68 @@ class ConnectionButton extends HookConsumerWidget {
       final hasExperimental = ref.read(ConfigOptions.hasExperimentalFeatures);
       final canShowNotice = !ref.read(disableExperimentalFeatureNoticeProvider);
       if (hasExperimental && canShowNotice && context.mounted) {
-        return await const ExperimentalFeatureNoticeDialog().show(context) ?? false;
+        return await const ExperimentalFeatureNoticeDialog().show(context) ??
+            false;
       }
       return true;
     }
 
     return _ConnectionButton(
+      loadingText: t.loadConfig,
+      isLoadingSub:isLoadingSub,
       onTap: switch (connectionStatus) {
         AsyncData(value: Disconnected()) || AsyncError() => () async {
-            if (await showExperimentalNotice()) {
-              return await ref.read(connectionNotifierProvider.notifier).toggleConnection();
-            }
-          },
+          if (await showExperimentalNotice()) {
+            return await ref
+                .read(connectionNotifierProvider.notifier)
+                .toggleConnection();
+          }
+        },
         AsyncData(value: Connected()) => () async {
-            if (requiresReconnect == true && await showExperimentalNotice()) {
-              return await ref.read(connectionNotifierProvider.notifier).reconnect(await ref.read(activeProfileProvider.future));
-            }
-            return await ref.read(connectionNotifierProvider.notifier).toggleConnection();
-          },
+          if (requiresReconnect == true && await showExperimentalNotice()) {
+            return await ref
+                .read(connectionNotifierProvider.notifier)
+                .reconnect(await ref.read(activeProfileProvider.future));
+          }
+          return await ref
+              .read(connectionNotifierProvider.notifier)
+              .toggleConnection();
+        },
         _ => () {},
       },
       enabled: switch (connectionStatus) {
-        AsyncData(value: Connected()) || AsyncData(value: Disconnected()) || AsyncError() => true,
+        AsyncData(value: Connected()) ||
+        AsyncData(value: Disconnected()) ||
+        AsyncError() =>
+        true,
         _ => false,
       },
       label: switch (connectionStatus) {
-        AsyncData(value: Connected()) when requiresReconnect == true => t.connection.reconnect,
-        AsyncData(value: Connected()) when delay <= 0 || delay >= 65000 => t.connection.connecting,
+        AsyncData(value: Connected()) when requiresReconnect == true =>
+        t.connection.reconnect,
+        AsyncData(value: Connected()) when delay <= 0 || delay >= 65000 =>
+        t.connection.connecting,
         AsyncData(value: final status) => status.present(t),
         _ => "",
       },
       buttonColor: switch (connectionStatus) {
-        AsyncData(value: Connected()) when requiresReconnect == true => Colors.teal,
-        AsyncData(value: Connected()) when delay <= 0 || delay >= 65000 => Color.fromARGB(255, 185, 176, 103),
+        AsyncData(value: Connected()) when requiresReconnect == true =>
+        Colors.teal,
+        AsyncData(value: Connected()) when delay <= 0 || delay >= 65000 =>
+            Color.fromARGB(255, 185, 176, 103),
         AsyncData(value: Connected()) => buttonTheme.connectedColor!,
         AsyncData(value: _) => buttonTheme.idleColor!,
         _ => Colors.red,
       },
       image: switch (connectionStatus) {
-        AsyncData(value: Connected()) when requiresReconnect == true => Assets.images.disconnectNorouz,
+        AsyncData(value: Connected()) when requiresReconnect == true =>
+        Assets.images.disconnectNorouz,
         AsyncData(value: Connected()) => Assets.images.connectNorouz,
         AsyncData(value: _) => Assets.images.disconnectNorouz,
         _ => Assets.images.disconnectNorouz,
-        AsyncData(value: Disconnected()) || AsyncError() => Assets.images.disconnectNorouz,
+        AsyncData(value: Disconnected()) ||
+        AsyncError() =>
+        Assets.images.disconnectNorouz,
         AsyncData(value: Connected()) => Assets.images.connectNorouz,
         _ => Assets.images.disconnectNorouz,
       },
@@ -107,17 +134,22 @@ class _ConnectionButton extends StatelessWidget {
     required this.buttonColor,
     required this.image,
     required this.useImage,
+    required this.isLoadingSub,
+    required this.loadingText,
   });
 
   final VoidCallback onTap;
   final bool enabled;
   final String label;
+  final String loadingText;
   final Color buttonColor;
   final AssetGenImage image;
   final bool useImage;
+  final bool isLoadingSub;
 
   @override
   Widget build(BuildContext context) {
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -165,15 +197,26 @@ class _ConnectionButton extends StatelessWidget {
                 ),
               ),
             ).animate(target: enabled ? 0 : 1).blurXY(end: 1),
-          ).animate(target: enabled ? 0 : 1).scaleXY(end: .88, curve: Curves.easeIn),
+          )
+              .animate(target: enabled ? 0 : 1)
+              .scaleXY(end: .88, curve: Curves.easeIn),
         ),
         const Gap(16),
-        ExcludeSemantics(
-          child: AnimatedText(
-            label,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoadingSub) const SpinKitFadingCircle(
+              color: Colors.black,
+              size: 20.0,
+            ) else const SizedBox(),
+            ExcludeSemantics(
+              child: AnimatedText(
+                isLoadingSub?loadingText:  label,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+          ],
+        )
       ],
     );
   }

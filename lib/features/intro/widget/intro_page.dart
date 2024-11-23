@@ -17,6 +17,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:timezone_to_country/timezone_to_country.dart';
 
+import '../../../gen/translations.g.dart';
+
 class IntroPage extends HookConsumerWidget with PresLogger {
   IntroPage({super.key});
 
@@ -40,11 +42,15 @@ class IntroPage extends HookConsumerWidget with PresLogger {
           slivers: [
             SliverToBoxAdapter(
               child: SizedBox(
-                width: 224,
-                height: 224,
+                width: 180,
+                height: 180,
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Assets.images.logo.svg(),
+                  child: Image.asset(
+                    "assets/images/ic_launcher.webp",
+                    width: 24,
+                    height: 24,
+                  ),
                 ),
               ),
             ),
@@ -56,7 +62,7 @@ class IntroPage extends HookConsumerWidget with PresLogger {
                   const SliverGap(4),
                   const RegionPrefTile(),
                   const SliverGap(4),
-                  const EnableAnalyticsPrefTile(),
+                  // const EnableAnalyticsPrefTile(),
                   const SliverGap(4),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -101,9 +107,9 @@ class IntroPage extends HookConsumerWidget with PresLogger {
                       },
                       child: isStarting.value
                           ? LinearProgressIndicator(
-                              backgroundColor: Colors.transparent,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            )
+                        backgroundColor: Colors.transparent,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      )
                           : Text(t.intro.start),
                     ),
                   ),
