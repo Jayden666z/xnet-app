@@ -50,7 +50,7 @@ class HomePage extends HookConsumerWidget {
       timeNumber = leftTimeProfile.replaceAll("分钟", "");
       time = t.minute;
     }
-    time = t.remaining + " " + timeNumber + time;
+    time = "${t.remaining} $timeNumber$time";
 
     return Scaffold(
       body: Stack(
@@ -58,17 +58,13 @@ class HomePage extends HookConsumerWidget {
         children: [
           //高100图片
           //20透明度图片 。灰色 变透明
-
-
-
-
-          Container(
+          SizedBox(
             height: 600,
             child: Opacity(
               opacity: 0.2, // 设置透明度为 20%
               child: Container(
-                decoration: BoxDecoration(
-                  image: const DecorationImage(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
                     image: AssetImage("assets/images/world.webp"),
                     fit: BoxFit.cover,
                   ),
