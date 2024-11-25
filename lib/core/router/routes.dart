@@ -87,10 +87,6 @@ GlobalKey<NavigatorState>? _dynamicRootKey = useMobileRouter ? rootNavigatorKey 
       path: "/mine",
       name: MineRoute.name,
     ),
-    TypedGoRoute<LoginRoute>(
-      path: "/login",
-      name: LoginRoute.name,
-    ),
   ],
 )
 class MobileWrapperRoute extends ShellRouteData {

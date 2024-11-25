@@ -4,7 +4,7 @@ import 'package:android_id/android_id.dart';
 import 'package:dartx/dartx.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'lib/uuid_utils.dart';
 import 'local_storage.dart';
@@ -19,6 +19,17 @@ class DeviceUtils {
   static const _androidIdPlugin = AndroidId();
   static String? _deviceId;
   static const key = 'deviceId';
+  static FlutterSecureStorage storage = FlutterSecureStorage();
+
+// 存储 UUID
+  Future<void> storeUUID(String key, String value) async {
+    await storage.write(key: key, value: value);
+  }
+
+// 读取 UUID
+  Future<String?> readUUID(String key) async {
+    return await storage.read(key: key);
+  }
 
   /// 获取唯一设备 ID
   /// 若没有从设备获取到，则生成一个 UUID 作为设备 ID
@@ -28,8 +39,21 @@ class DeviceUtils {
       return _deviceId!;
     }
 
+    if(Platform.isIOS){
+      String? uuidValue = await storage.read(key: 'xnet_device_id');
+      if (uuidValue.isNotNullOrEmpty) {
+        return uuidValue??"";
+      } else {
+        String uuid= UuidUtils.getUuid();
+        await storage.write(key: 'xnet_device_id', value:uuid);
+        return uuid;
+      }
+    }
+
+
+
     // 从本地获取设备ID
-    String? deviceId = await  SpUtil.get(key);
+    String? deviceId = await SpUtil.get(key);
     if (deviceId.isNotNullOrEmpty) {
       _deviceId = deviceId;
       return _deviceId!;
@@ -51,7 +75,6 @@ class DeviceUtils {
     return _deviceId!;
   }
 
-
   /// 获取操作系统版本号
   static Future<String> getSystemVersion() async {
     Map<String, dynamic> deviceData = await getDeviceData();
@@ -64,9 +87,6 @@ class DeviceUtils {
     }
     return '';
   }
-
-
-
 
   /// 获取 AndroidId
   static Future<String?> _getAndroidId() async {
@@ -99,7 +119,8 @@ class DeviceUtils {
     } else {
       switch (defaultTargetPlatform) {
         case TargetPlatform.android:
-          _deviceData = _readAndroidDeviceInfo(await deviceInfoPlugin.androidInfo);
+          _deviceData =
+              _readAndroidDeviceInfo(await deviceInfoPlugin.androidInfo);
           break;
         case TargetPlatform.iOS:
           _deviceData = _readIosDeviceInfo(await deviceInfoPlugin.iosInfo);
@@ -111,11 +132,14 @@ class DeviceUtils {
           _deviceData = _readMacOsDeviceInfo(await deviceInfoPlugin.macOsInfo);
           break;
         case TargetPlatform.windows:
-          _deviceData = _readWindowsDeviceInfo(await deviceInfoPlugin.windowsInfo);
+          _deviceData =
+              _readWindowsDeviceInfo(await deviceInfoPlugin.windowsInfo);
           break;
         case TargetPlatform.fuchsia:
         default:
-          _deviceData = <String, dynamic>{'Error:': 'Fuchsia platform isn\'t supported'};
+          _deviceData = <String, dynamic>{
+            'Error:': 'Fuchsia platform isn\'t supported'
+          };
           break;
       }
     }
@@ -150,7 +174,8 @@ class DeviceUtils {
       'type': build.type,
       'isPhysicalDevice': build.isPhysicalDevice,
       'systemFeatures': build.systemFeatures,
-      'displaySizeInches': ((build.displayMetrics.sizeInches * 10).roundToDouble() / 10),
+      'displaySizeInches':
+          ((build.displayMetrics.sizeInches * 10).roundToDouble() / 10),
       'displayWidthPixels': build.displayMetrics.widthPx,
       'displayWidthInches': build.displayMetrics.widthInches,
       'displayHeightPixels': build.displayMetrics.heightPx,
