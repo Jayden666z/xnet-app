@@ -56,6 +56,31 @@ class HomePage extends HookConsumerWidget {
       body: Stack(
         alignment: Alignment.bottomCenter,
         children: [
+          //高100图片
+          //20透明度图片 。灰色 变透明
+
+
+
+
+          Container(
+            height: 600,
+            child: Opacity(
+              opacity: 0.2, // 设置透明度为 20%
+              child: Container(
+                decoration: BoxDecoration(
+                  image: const DecorationImage(
+                    image: AssetImage("assets/images/world.webp"),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+
+
+
+
           CustomScrollView(
             slivers: [
               NestedAppBar(
